@@ -105,7 +105,10 @@ function App() {
 
   return (
     <div className="container">
-      <h1>🎯 CreditCoach</h1>
+      <div className="header">
+        <h1>SmartScore</h1>
+        <p className="subtitle">Personal Credit Coach</p>
+      </div>
       <form onSubmit={handleSubmit} className="main-form">
         <div className="form-section">
           <label>📋 Paste JSON credit data (optional):</label>
