@@ -86,21 +86,71 @@ function App() {
     } finally {
       setIsLoading(false);
     }
-    // Send to backend
+    
+    // Client-side credit analysis (no backend needed)
     try {
-      const res = await fetch('http://localhost:5000/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Server error');
-      setResult(data);
+      const analysisResult = analyzeCreditProfile(payload);
+      setResult(analysisResult);
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Failed to analyze credit profile');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Client-side credit analysis function
+  const analyzeCreditProfile = (data) => {
+    const { creditScore, creditCards, paymentHistory } = data;
+    const tips = [];
+
+    // Credit utilization analysis
+    const totalBalance = creditCards.reduce((sum, card) => sum + parseFloat(card.balance || 0), 0);
+    const totalLimit = creditCards.reduce((sum, card) => sum + parseFloat(card.limit || 0), 0);
+    const utilization = totalLimit > 0 ? (totalBalance / totalLimit) : 0;
+
+    if (utilization > 0.3) {
+      tips.push("High credit utilization detected. Try to keep total credit usage below 30% of your limits.");
+    }
+
+    if (utilization > 0.7) {
+      tips.push("Very high credit utilization! Consider paying down balances immediately to improve your score.");
+    }
+
+    // Payment history analysis
+    const latePayments = paymentHistory.filter(payment => payment === false).length;
+    if (latePayments > 0) {
+      tips.push(`You have ${latePayments} late payment(s) in the last 6 months. Set up automatic payments to avoid future late payments.`);
+    }
+
+    // Credit score range analysis
+    if (creditScore < 600) {
+      tips.push("Your credit score is in the poor range. Focus on making all payments on time and reducing debt.");
+    } else if (creditScore < 650) {
+      tips.push("Your credit score is fair. Continue making payments on time and consider keeping old accounts open to build credit history.");
+    } else if (creditScore < 700) {
+      tips.push("Your credit score is good. You're on the right track! Keep improving by maintaining low balances and on-time payments.");
+    } else if (creditScore < 750) {
+      tips.push("Your credit score is very good! You qualify for most loans and credit cards with competitive rates.");
+    } else {
+      tips.push("Excellent credit score! You have access to the best rates and terms available.");
+    }
+
+    // Credit mix analysis
+    if (creditCards.length === 1) {
+      tips.push("Consider diversifying your credit mix with different types of accounts (but only if needed).");
+    }
+
+    // Canadian-specific tips
+    tips.push("In Canada, check your credit report for free annually through Equifax or TransUnion.");
+    
+    if (tips.length === 0) {
+      tips.push("Great job! Your credit profile looks healthy. Keep up the good work!");
+    }
+
+    return {
+      creditScore: creditScore,
+      tips: tips
+    };
   };
 
   return (
