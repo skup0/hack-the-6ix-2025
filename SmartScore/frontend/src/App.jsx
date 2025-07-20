@@ -1,15 +1,24 @@
 import React, { useState } from 'react';
+import './index.css';
 
 // Dashboard UI for displaying results
 function Dashboard({ result }) {
   if (!result) return null;
   return (
     <div className="dashboard">
-      <h2>Credit Score: {result.creditScore}</h2>
-      <h3>Improvement Tips:</h3>
-      <ul>
-        {result.tips && result.tips.length > 0 ? result.tips.map((tip, i) => <li key={i}>{tip}</li>) : <li>No tips needed!</li>}
-      </ul>
+      <div className="credit-score">
+        <div className="score-display">{result.creditScore}</div>
+        <div className="score-label">Credit Score</div>
+      </div>
+      <div className="tips-section">
+        <h3>💡 Improvement Tips</h3>
+        <ul className="tips-list">
+          {result.tips && result.tips.length > 0 ? 
+            result.tips.map((tip, i) => <li key={i} className="tip-item">{tip}</li>) : 
+            <li className="no-tips">🎉 Great job! No improvement tips needed!</li>
+          }
+        </ul>
+      </div>
     </div>
   );
 }
@@ -23,6 +32,7 @@ function App() {
   const [jsonInput, setJsonInput] = useState('');
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   // Handle manual field changes
   const handleChange = (e, idx, field) => {
@@ -47,6 +57,7 @@ function App() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
     let payload;
     try {
       if (jsonInput) {
@@ -72,6 +83,8 @@ function App() {
     } catch (err) {
       setError('Invalid JSON or form data.');
       return;
+    } finally {
+      setIsLoading(false);
     }
     // Send to backend
     try {
@@ -85,42 +98,127 @@ function App() {
       setResult(data);
     } catch (err) {
       setError(err.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="container">
-      <h1>CreditCoach Analyzer</h1>
-      <form onSubmit={handleSubmit}>
-        <label>Paste JSON credit data (optional):</label>
-        <textarea value={jsonInput} onChange={e => setJsonInput(e.target.value)} rows={5} />
-        <div>or fill manually:</div>
-        <label>Credit Score:</label>
-        <input type="number" name="creditScore" value={form.creditScore} onChange={handleChange} />
-        <h3>Credit Cards</h3>
-        {form.creditCards.map((card, idx) => (
-          <div key={idx} className="card-fields">
-            <input name="name" placeholder="Card Name" value={card.name} onChange={e => handleChange(e, idx, 'creditCards')} />
-            <input name="balance" type="number" placeholder="Balance" value={card.balance} onChange={e => handleChange(e, idx, 'creditCards')} />
-            <input name="limit" type="number" placeholder="Limit" value={card.limit} onChange={e => handleChange(e, idx, 'creditCards')} />
-            <select name="paymentOnTime" value={card.paymentOnTime} onChange={e => handleChange(e, idx, 'creditCards')}>
-              <option value={true}>On Time</option>
-              <option value={false}>Late</option>
-            </select>
-            <button type="button" onClick={() => removeCard(idx)}>Remove</button>
+      <h1>🎯 CreditCoach</h1>
+      <form onSubmit={handleSubmit} className="main-form">
+        <div className="form-section">
+          <label>📋 Paste JSON credit data (optional):</label>
+          <textarea 
+            value={jsonInput} 
+            onChange={e => setJsonInput(e.target.value)} 
+            placeholder='{"creditScore": 700, "creditCards": [{"name": "Visa", "balance": 1500, "limit": 5000, "paymentOnTime": true}], "paymentHistory": [true, true, false, true, true, true]}'
+            rows={4} 
+          />
+        </div>
+
+        <div className="divider">
+          <span>or fill manually</span>
+        </div>
+
+        <div className="form-section">
+          <div className="input-group">
+            <label>💳 Credit Score:</label>
+            <input 
+              type="number" 
+              name="creditScore" 
+              value={form.creditScore} 
+              onChange={handleChange}
+              placeholder="Enter your credit score (300-850)"
+              min="300"
+              max="850"
+            />
           </div>
-        ))}
-        <button type="button" onClick={addCard}>Add Card</button>
-        <h3>Payment History (last 6 months)</h3>
-        {form.paymentHistory.map((val, idx) => (
-          <select key={idx} value={val} onChange={e => handleChange(e, idx, 'paymentHistory')}>
-            <option value={true}>On Time</option>
-            <option value={false}>Late</option>
-          </select>
-        ))}
-        <button type="submit">Analyze</button>
+        </div>
+
+        <div className="form-section">
+          <h3>💰 Credit Cards</h3>
+          {form.creditCards.map((card, idx) => (
+            <div key={idx} className="card-fields">
+              <div>
+                <label>Card Name</label>
+                <input 
+                  name="name" 
+                  placeholder="e.g., Visa Platinum" 
+                  value={card.name} 
+                  onChange={e => handleChange(e, idx, 'creditCards')} 
+                />
+              </div>
+              <div>
+                <label>Balance ($)</label>
+                <input 
+                  name="balance" 
+                  type="number" 
+                  placeholder="1500" 
+                  value={card.balance} 
+                  onChange={e => handleChange(e, idx, 'creditCards')} 
+                />
+              </div>
+              <div>
+                <label>Limit ($)</label>
+                <input 
+                  name="limit" 
+                  type="number" 
+                  placeholder="5000" 
+                  value={card.limit} 
+                  onChange={e => handleChange(e, idx, 'creditCards')} 
+                />
+              </div>
+              <div>
+                <label>Payment Status</label>
+                <select 
+                  name="paymentOnTime" 
+                  value={card.paymentOnTime} 
+                  onChange={e => handleChange(e, idx, 'creditCards')}
+                >
+                  <option value={true}>✅ On Time</option>
+                  <option value={false}>❌ Late</option>
+                </select>
+              </div>
+              <div>
+                <label>&nbsp;</label>
+                <button 
+                  type="button" 
+                  className="btn btn-danger" 
+                  onClick={() => removeCard(idx)}
+                  disabled={form.creditCards.length === 1}
+                >
+                  🗑️ Remove
+                </button>
+              </div>
+            </div>
+          ))}
+          <button type="button" className="btn btn-add" onClick={addCard}>
+            ➕ Add Credit Card
+          </button>
+        </div>
+
+        <div className="form-section">
+          <h3>📊 Payment History (Last 6 Months)</h3>
+          <div className="payment-history">
+            {form.paymentHistory.map((val, idx) => (
+              <div key={idx}>
+                <label>Month {6-idx}</label>
+                <select value={val} onChange={e => handleChange(e, idx, 'paymentHistory')}>
+                  <option value={true}>✅ On Time</option>
+                  <option value={false}>❌ Late</option>
+                </select>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <button type="submit" className="btn btn-primary" disabled={isLoading}>
+          {isLoading ? <span className="loading"></span> : '🔍 Analyze Credit Score'}
+        </button>
       </form>
-      {error && <div className="error">{error}</div>}
+      
+      {error && <div className="error">⚠️ {error}</div>}
       <Dashboard result={result} />
     </div>
   );
