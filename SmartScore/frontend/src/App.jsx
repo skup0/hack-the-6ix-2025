@@ -27,7 +27,7 @@ function App() {
   const [form, setForm] = useState({
     creditScore: '',
     creditCards: [{ name: '', balance: '', limit: '', paymentOnTime: true }],
-    paymentHistory: ['', '', '', '', '', '']
+    paymentHistory: [true, true, true, true, true, true]
   });
   const [jsonInput, setJsonInput] = useState('');
   const [result, setResult] = useState(null);
